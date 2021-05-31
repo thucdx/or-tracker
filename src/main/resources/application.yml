@@ -1,6 +1,24 @@
 server:
   port: 8081
-  prop_path: config/server.properties
 
 db:
   prop_path: config/oberbayern.properties
+
+matcher:
+  sigma: 10
+  lambda: 0.0
+  distance:
+    min: 0
+    max: 15000
+  radius:
+    max: 200
+  interval:
+    min:1000
+  threads: 8
+  shortenturns: true
+
+tracker:
+  monitor:
+    sensitive: 0
+  state:
+    ttl: 60

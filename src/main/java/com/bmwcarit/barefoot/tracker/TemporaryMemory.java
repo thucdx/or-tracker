@@ -33,7 +33,7 @@ import com.bmwcarit.barefoot.util.Tuple;
  * Memory class for storing elements temporarily by defining a time to live (TTL). This class is a
  * work-around solution and will be very likely replaced in future releases.
  */
-class TemporaryMemory<E extends TemporaryElement<E>> {
+public class TemporaryMemory<E extends TemporaryElement<E>> {
     private final static Logger logger = LoggerFactory.getLogger(TemporaryMemory.class);
     private final Map<String, E> map = new HashMap<>();
     private final Queue<Tuple<Long, E>> queue =
