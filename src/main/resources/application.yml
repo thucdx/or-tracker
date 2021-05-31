@@ -1,0 +1,6 @@
+server:
+  port: 8081
+  prop_path: config/server.properties
+
+db:
+  prop_path: config/oberbayern.properties
