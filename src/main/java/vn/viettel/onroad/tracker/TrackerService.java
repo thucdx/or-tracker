@@ -1,11 +1,14 @@
 package vn.viettel.onroad.tracker;
 
 import com.bmwcarit.barefoot.matcher.Matcher;
+import com.bmwcarit.barefoot.matcher.MatcherCandidate;
 import com.bmwcarit.barefoot.matcher.MatcherKState;
+import com.bmwcarit.barefoot.matcher.MatcherSample;
 import com.bmwcarit.barefoot.roadmap.Loader;
 import com.bmwcarit.barefoot.roadmap.RoadMap;
 import com.bmwcarit.barefoot.roadmap.TimePriority;
 import com.bmwcarit.barefoot.spatial.Geography;
+import com.bmwcarit.barefoot.spatial.SpatialOperator;
 import com.bmwcarit.barefoot.topology.Dijkstra;
 import com.bmwcarit.barefoot.tracker.TemporaryMemory;
 import com.bmwcarit.barefoot.tracker.TrackerServer;
@@ -14,7 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import com.bmwcarit.barefoot.util.Stopwatch;
 import vn.viettel.onroad.StatePublisher;
+import vn.viettel.onroad.model.ResponseStatus;
 import vn.viettel.onroad.model.State;
 
 import javax.annotation.PostConstruct;
@@ -22,6 +27,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class TrackerService {
@@ -33,6 +40,7 @@ public class TrackerService {
     private RoadMap map = null;
     private Matcher matcher;
     private TemporaryMemory<State> memory;
+    private final static SpatialOperator spatial = new Geography();
 
     @PostConstruct
     private void init() {
@@ -52,7 +60,7 @@ public class TrackerService {
             System.exit(1);
         }
 
-        RoadMap map = null;
+        map = null;
         try {
             map = Loader.roadmap(dbProp, true);
         } catch (SourceException e) {
@@ -78,6 +86,72 @@ public class TrackerService {
                 return new State(id);
             }
         }, new StatePublisher(port));
+    }
+
+    /**
+     *
+     * @param sample
+     * @return
+     */
+    public ResponseStatus update(MatcherSample sample) {
+        final State state = memory.getLocked(sample.id());
+
+        MatcherSample prevSample = state.getInner().sample();
+        if (prevSample != null) {
+            // Out of order
+            if (sample.time() < prevSample.time()) {
+                state.unlock();
+                logger.warn("Received out of order sample");
+                logger.warn("Id {} received out of order sample at {}", sample.id(), sample.time());
+                return ResponseStatus.ERROR;
+            }
+
+            // Short distance
+            if (spatial.distance(sample.point(), prevSample.point()) < Math.max(0, distance)) {
+                state.unlock();
+                logger.warn("Id {} received sample below distance threshold", sample.id());
+                return ResponseStatus.SUCCESS;
+            }
+
+            // Time
+            if (sample.time() - prevSample.time() < Math.max(0, interval)) {
+                state.unlock();
+                logger.warn("Id {} received sample below interval threshold", sample.id());
+                return ResponseStatus.SUCCESS;
+            }
+        }
+
+        final AtomicReference<Set<MatcherCandidate>> vector = new AtomicReference<>();
+        Stopwatch sw = new Stopwatch();
+        sw.start();
+        Set<MatcherCandidate> curMatcherCandidates = matcher.execute(state.getInner().vector(),
+                state.getInner().sample(), sample);
+        vector.set(curMatcherCandidates);
+        sw.stop();
+
+        logger.debug("State update of object {} processed in {} ms", sample.id(), sw.ms());
+        logger.debug("Matcher candidate for object {} is: {}", sample.id(), curMatcherCandidates.size());
+
+        // if everything is ok
+        boolean publish = true;
+        MatcherCandidate prevEstimate = state.getInner().estimate();
+        state.getInner().update(vector.get(), sample);
+
+        if (prevSample != null && prevEstimate != null) {
+            if (spatial.distance(prevSample.point(), sample.point()) < sensitive
+            && prevEstimate.point().edge().id() == state.getInner().estimate().point().edge().id()) {
+                publish = false;
+                logger.debug("Unpublished update");
+            }
+        }
+
+        state.updateAndUnlock(TTL, publish);
+
+        return ResponseStatus.SUCCESS;
+    }
+
+    public State getState(String id) {
+        return memory.getIfExistsLocked(id);
     }
 
     @Value("${matcher.radius.max}")
