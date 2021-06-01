@@ -89,7 +89,6 @@ public class TrackerService {
     }
 
     /**
-     *
      * @param sample
      * @return
      */
@@ -139,9 +138,15 @@ public class TrackerService {
 
         if (prevSample != null && prevEstimate != null) {
             if (spatial.distance(prevSample.point(), sample.point()) < sensitive
-            && prevEstimate.point().edge().id() == state.getInner().estimate().point().edge().id()) {
+                    && prevEstimate.point().edge().id() == state.getInner().estimate().point().edge().id()) {
                 publish = false;
                 logger.debug("Unpublished update");
+            } else {
+                MatcherCandidate estimate = state.getInner().estimate();
+                double distance = spatial.distance(estimate.point().geometry(), sample.point());
+
+                logger.info("New matching: filtprob = {}, distance from measure: {}",
+                        state.getInner().estimate().filtprob(), distance);
             }
         }
 

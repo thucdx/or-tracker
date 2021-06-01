@@ -9,7 +9,7 @@ matcher:
   lambda: 0.0
   distance:
     min: 0
-    max: 15000
+    max: 3000
   radius:
     max: 200
   interval:
@@ -22,3 +22,7 @@ tracker:
     sensitive: 0
   state:
     ttl: 60
+
+kstate:
+  k: 60
+  t: 60
