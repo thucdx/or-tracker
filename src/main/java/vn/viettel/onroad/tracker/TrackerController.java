@@ -6,9 +6,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import vn.viettel.onroad.model.ResponseStatus;
 
 @RestController
@@ -18,10 +16,12 @@ public class TrackerController {
     @Autowired
     TrackerService tracker;
 
-    @GetMapping("/track")
-    public ResponseStatus track(String request) {
+    @PostMapping("/")
+    public ResponseStatus track(@RequestBody String request) {
         try {
+            logger.info("Request: " + request);
             JSONObject json = new JSONObject(request);
+
             if (!json.optString("id").isEmpty()
                     && !json.optString("time").isEmpty()
                     && !json.optString("point").isEmpty()) {

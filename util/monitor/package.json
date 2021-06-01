@@ -1,0 +1,13 @@
+{
+  "name": "barefoot-monitor",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "description": "simple barefoot monitor application",
+  "dependencies": {
+    "bufferutil": "^4.0.3",
+    "express": "^4.13.4",
+    "socket.io": "^1.4.4",
+    "utf-8-validate": "^5.0.5",
+    "zmq": "^2.15.3"
+  }
+}
