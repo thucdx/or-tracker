@@ -35,4 +35,32 @@ public class TrackerController {
             return ResponseStatus.ERROR;
         }
     }
+
+    @PostMapping("/track")
+    public ResponseStatus track2(@RequestBody String request) {
+        try {
+            logger.info("Request: " + request);
+            JSONObject json = new JSONObject(request);
+            String id = json.optString("id");
+            long time = json.optLong("time");
+            double lat = json.optDouble("lat");
+            double lng = json.optDouble("lng");
+            double heading = json.optDouble("heading");
+
+            // Heading is optional.
+            if (!id.isEmpty() && time > 0 && (!Double.isNaN(lat)) && (!Double.isNaN(lng))) {
+                try {
+                    final MatcherSample sample = new MatcherSample(id, time, lat, lng, heading);
+                    return tracker.update(sample);
+                } catch (Exception e) {
+                    return ResponseStatus.SERVER_ERROR;
+                }
+            } else {
+                return ResponseStatus.ERROR;
+            }
+        } catch (JSONException e) {
+            logger.warn(e.getMessage(), e);
+            return ResponseStatus.ERROR;
+        }
+    }
 }

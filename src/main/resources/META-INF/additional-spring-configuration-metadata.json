@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "db.prop_path",
+      "type": "java.lang.String",
+      "description": "Description for db.prop_path."
+  }
+] }

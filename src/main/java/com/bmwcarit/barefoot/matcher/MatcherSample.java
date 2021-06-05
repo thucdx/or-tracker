@@ -101,6 +101,21 @@ public class MatcherSample extends com.bmwcarit.barefoot.markov.Sample {
         }
     }
 
+    /**
+     * Create MatcherSample object with
+     * @param id
+     * @param time
+     * @param lat
+     * @param lng
+     * @param azimuth
+     */
+    public MatcherSample(String id, long time, double lat, double lng, double azimuth) {
+        super(time);
+        this.id = id;
+        this.azimuth = norm(azimuth);
+        this.point = new Point(lng, lat);
+    }
+
     private static double norm(double azimuth) {
         return azimuth >= 360 ? azimuth - (360 * (int) (azimuth / 360))
                 : azimuth < 0 ? azimuth - (360 * ((int) (azimuth / 360) - 1)) : azimuth;

@@ -13,6 +13,8 @@ import com.bmwcarit.barefoot.topology.Dijkstra;
 import com.bmwcarit.barefoot.tracker.TemporaryMemory;
 import com.bmwcarit.barefoot.tracker.TrackerServer;
 import com.bmwcarit.barefoot.util.SourceException;
+import com.esri.core.geometry.GeometryEngine;
+import com.esri.core.geometry.WktExportFlags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -145,8 +147,14 @@ public class TrackerService {
                 MatcherCandidate estimate = state.getInner().estimate();
                 double distance = spatial.distance(estimate.point().geometry(), sample.point());
 
-                logger.info("New matching: filtprob = {}, distance from measure: {}",
-                        state.getInner().estimate().filtprob(), distance);
+                try {
+                    logger.info("Sample: {}, candidate: {}, New matching: filtprob = {}, distance from measure: {}",
+                            sample.toJSON().toString(),
+                            GeometryEngine.geometryToWkt(estimate.point().geometry(), WktExportFlags.wktExportPoint),
+                            estimate.filtprob(), distance);
+                } catch (Exception e) {
+                    logger.warn(e.getMessage());
+                }
             }
         }
 
