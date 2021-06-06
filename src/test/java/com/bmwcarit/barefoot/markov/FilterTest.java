@@ -19,6 +19,7 @@ import static org.junit.Assert.assertNotEquals;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -153,8 +154,8 @@ public class FilterTest {
                     states.transition(predecessor.two().numid(), candidate.two().numid()));
         }
 
-        public Set<MockElement> execute() {
-            Set<MockElement> predecessors = new HashSet<>();
+        public TreeSet<MockElement> execute() {
+            TreeSet<MockElement> predecessors = new TreeSet<>();
             for (int p = 0; p < states.numPredecessors(); ++p) {
                 Tuple<Double, Double> pred = states.predecessor(p);
                 predecessors.add(new MockElement(p, pred.one(), pred.two()));

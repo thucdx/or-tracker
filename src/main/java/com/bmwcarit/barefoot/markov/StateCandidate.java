@@ -26,7 +26,8 @@ import org.json.JSONObject;
  * @param <T> Transition inherits from {@link StateTransition}.
  * @param <S> Sample inherits from {@link Sample}.
  */
-public class StateCandidate<C extends StateCandidate<C, T, S>, T extends StateTransition, S extends Sample> {
+public class StateCandidate<C extends StateCandidate<C, T, S>, T extends StateTransition, S extends Sample>
+        implements Comparable<StateCandidate<C,T,S>> {
     private final String id;
     private C predecessor = null;
     private T transition = null;
@@ -168,5 +169,10 @@ public class StateCandidate<C extends StateCandidate<C, T, S>, T extends StateTr
             json.put("transition", transition().toJSON());
         }
         return json;
+    }
+
+    @Override
+    public int compareTo(StateCandidate<C, T, S> o) {
+        return Double.compare(filtprob, o.filtprob);
     }
 }

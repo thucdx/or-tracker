@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import vn.viettel.onroad.model.MovingSample;
 import vn.viettel.onroad.model.ResponseStatus;
 
 @RestController
@@ -25,7 +26,7 @@ public class TrackerController {
             if (!json.optString("id").isEmpty()
                     && !json.optString("time").isEmpty()
                     && !json.optString("point").isEmpty()) {
-                        final MatcherSample sample = new MatcherSample(json);
+                        final MovingSample sample = new MovingSample(json);
                         return tracker.update(sample);
             } else {
                 return ResponseStatus.ERROR;
@@ -46,11 +47,12 @@ public class TrackerController {
             double lat = json.optDouble("lat");
             double lng = json.optDouble("lng");
             double heading = json.optDouble("heading");
+            double velocity = json.optDouble("velocity");
 
             // Heading is optional.
             if (!id.isEmpty() && time > 0 && (!Double.isNaN(lat)) && (!Double.isNaN(lng))) {
                 try {
-                    final MatcherSample sample = new MatcherSample(id, time, lat, lng, heading);
+                    final MovingSample sample = new MovingSample(id, time, lat, lng, heading, velocity);
                     return tracker.update(sample);
                 } catch (Exception e) {
                     return ResponseStatus.SERVER_ERROR;

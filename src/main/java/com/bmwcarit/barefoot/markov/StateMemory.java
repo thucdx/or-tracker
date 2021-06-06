@@ -15,6 +15,7 @@ package com.bmwcarit.barefoot.markov;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,7 +31,7 @@ import org.json.JSONObject;
  * @param <S> Sample inherits from {@link Sample}.
  */
 public class StateMemory<C extends StateCandidate<C, T, S>, T extends StateTransition, S extends Sample> {
-    private Set<C> candidates = new HashSet<>();
+    private TreeSet<C> candidates = new TreeSet<>();
     private S sample = null;
 
     /**
@@ -110,7 +111,7 @@ public class StateMemory<C extends StateCandidate<C, T, S>, T extends StateTrans
      * @param vector State vector for update of the state.
      * @param sample Sample measurement of the state vector.
      */
-    public void update(Set<C> vector, S sample) {
+    public void update(TreeSet<C> vector, S sample) {
         if (vector.isEmpty()) {
             return;
         }

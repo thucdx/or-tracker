@@ -14,13 +14,7 @@
 package com.bmwcarit.barefoot.matcher;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -381,7 +375,7 @@ public class Matcher extends Filter<MatcherCandidate, MatcherTransition, Matcher
                     || (sample.time() - state.sample().time()) < Math.max(0, minInterval))) {
                 continue;
             }
-            Set<MatcherCandidate> vector = execute(state.vector(), state.sample(), sample);
+            TreeSet<MatcherCandidate> vector = execute(state.vector(), state.sample(), sample);
             state.update(vector, sample);
         }
 

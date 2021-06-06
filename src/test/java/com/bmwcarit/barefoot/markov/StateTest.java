@@ -15,11 +15,7 @@ package com.bmwcarit.barefoot.markov;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -72,8 +68,8 @@ public class StateTest {
 
         StateMemory<MockElem, StateTransition, Sample> state = new StateMemory<>();
         {
-            Set<MockElem> vector =
-                    new HashSet<>(Arrays.asList(elements.get(0), elements.get(1), elements.get(2)));
+            TreeSet<MockElem> vector =
+                    new TreeSet<>(Arrays.asList(elements.get(0), elements.get(1), elements.get(2)));
 
             state.update(vector, new Sample(0));
 
@@ -87,7 +83,7 @@ public class StateTest {
         elements.put(6, new MockElem(6, Math.log10(0.1), 0.1, elements.get(2)));
 
         {
-            Set<MockElem> vector = new HashSet<>(Arrays.asList(elements.get(3), elements.get(4),
+            TreeSet<MockElem> vector = new TreeSet<>(Arrays.asList(elements.get(3), elements.get(4),
                     elements.get(5), elements.get(6)));
 
             state.update(vector, new Sample(1));
@@ -102,7 +98,7 @@ public class StateTest {
         elements.put(10, new MockElem(10, Math.log10(0.1), 0.1, elements.get(6)));
 
         {
-            Set<MockElem> vector = new HashSet<>(Arrays.asList(elements.get(7), elements.get(8),
+            TreeSet<MockElem> vector = new TreeSet<>(Arrays.asList(elements.get(7), elements.get(8),
                     elements.get(9), elements.get(10)));
 
             state.update(vector, new Sample(2));
@@ -117,7 +113,7 @@ public class StateTest {
         elements.put(14, new MockElem(14, Math.log10(0.1), 0.1, null));
 
         {
-            Set<MockElem> vector = new HashSet<>(Arrays.asList(elements.get(11), elements.get(12),
+            TreeSet<MockElem> vector = new TreeSet<>(Arrays.asList(elements.get(11), elements.get(12),
                     elements.get(13), elements.get(14)));
 
             state.update(vector, new Sample(3));
@@ -126,7 +122,7 @@ public class StateTest {
             assertEquals(13, state.estimate().numid());
         }
         {
-            Set<MockElem> vector = new HashSet<>();
+            TreeSet<MockElem> vector = new TreeSet<>();
 
             state.update(vector, new Sample(4));
 
@@ -151,7 +147,7 @@ public class StateTest {
         elements.put(2, new MockElem(2, Math.log10(0.5), 0.5, null));
 
         state.update(
-                new HashSet<>(Arrays.asList(elements.get(0), elements.get(1), elements.get(2))),
+                new TreeSet<>(Arrays.asList(elements.get(0), elements.get(1), elements.get(2))),
                 new Sample(0));
 
         {
@@ -170,7 +166,7 @@ public class StateTest {
         elements.put(5, new MockElem(5, Math.log10(0.4), 0.4, elements.get(2)));
         elements.put(6, new MockElem(6, Math.log10(0.1), 0.1, elements.get(2)));
 
-        state.update(new HashSet<>(
+        state.update(new TreeSet<>(
                 Arrays.asList(elements.get(3), elements.get(4), elements.get(5), elements.get(6))),
                 new Sample(1));
 
@@ -190,7 +186,7 @@ public class StateTest {
         elements.put(9, new MockElem(9, Math.log10(0.4), 0.4, elements.get(6)));
         elements.put(10, new MockElem(10, Math.log10(0.1), 0.1, elements.get(6)));
 
-        state.update(new HashSet<>(
+        state.update(new TreeSet<>(
                 Arrays.asList(elements.get(7), elements.get(8), elements.get(9), elements.get(10))),
                 new Sample(2));
 
@@ -210,10 +206,10 @@ public class StateTest {
         elements.put(13, new MockElem(13, Math.log10(0.4), 0.4, null));
         elements.put(14, new MockElem(14, Math.log10(0.1), 0.1, null));
 
-        state.update(new HashSet<>(Arrays.asList(elements.get(11), elements.get(12),
+        state.update(new TreeSet<>(Arrays.asList(elements.get(11), elements.get(12),
                 elements.get(13), elements.get(14))), new Sample(3));
 
-        state.update(new HashSet<MockElem>(), new Sample(4));
+        state.update(new TreeSet<>(), new Sample(4));
 
         {
             JSONObject json = state.toJSON();

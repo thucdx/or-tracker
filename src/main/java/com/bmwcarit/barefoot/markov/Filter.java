@@ -13,10 +13,7 @@
 
 package com.bmwcarit.barefoot.markov;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -111,7 +108,7 @@ public abstract class Filter<C extends StateCandidate<C, T, S>, T extends StateT
      *
      * @return State vector <i>S<sub>t</sub></i>, which may be empty if an HMM break occured.
      */
-    public Set<C> execute(Set<C> predecessors, S previous, S sample) {
+    public TreeSet<C> execute(TreeSet<C> predecessors, S previous, S sample) {
         if (logger.isTraceEnabled()) {
             try {
                 logger.trace("execute sample {}", sample.toJSON().toString());
@@ -123,7 +120,7 @@ public abstract class Filter<C extends StateCandidate<C, T, S>, T extends StateT
         assert (predecessors != null);
         assert (sample != null);
 
-        Set<C> result = new HashSet<>();
+        TreeSet<C> result = new TreeSet<>();
         Set<Tuple<C, Double>> candidates = candidates(predecessors, sample);
         logger.trace("{} state candidates", candidates.size());
 

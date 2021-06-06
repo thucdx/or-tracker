@@ -51,7 +51,6 @@ public class StatePublisher extends Thread implements TemporaryMemory.Publisher<
         }
     }
 
-
     @Override
     public void delete(String id, long time) {
         try {

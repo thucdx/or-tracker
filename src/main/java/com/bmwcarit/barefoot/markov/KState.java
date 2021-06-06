@@ -13,15 +13,8 @@
 
 package com.bmwcarit.barefoot.markov;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,7 +33,7 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
         extends StateMemory<C, T, S> {
     private final int k;
     private final long t;
-    private final LinkedList<Tuple<Set<C>, S>> sequence;
+    private final LinkedList<Tuple<TreeSet<C>, S>> sequence;
     private final Map<C, Integer> counters;
 
     /**
@@ -80,7 +73,7 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
         JSONArray jsonsequence = json.getJSONArray("sequence");
         for (int i = 0; i < jsonsequence.length(); ++i) {
             JSONObject jsonseqelement = jsonsequence.getJSONObject(i);
-            Set<C> vector = new HashSet<>();
+            TreeSet<C> vector = new TreeSet<>();
             JSONArray jsonvector = jsonseqelement.getJSONArray("vector");
             for (int j = 0; j < jsonvector.length(); ++j) {
                 JSONObject jsonelement = jsonvector.getJSONObject(j);
@@ -104,16 +97,13 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
             sequence.add(new Tuple<>(vector, sample));
         }
 
-        Collections.sort(sequence, new Comparator<Tuple<Set<C>, S>>() {
-            @Override
-            public int compare(Tuple<Set<C>, S> left, Tuple<Set<C>, S> right) {
-                if (left.two().time() < right.two().time()) {
-                    return -1;
-                } else if (left.two().time() > right.two().time()) {
-                    return +1;
-                }
-                return 0;
+        Collections.sort(sequence, (left, right) -> {
+            if (left.two().time() < right.two().time()) {
+                return -1;
+            } else if (left.two().time() > right.two().time()) {
+                return +1;
             }
+            return 0;
         });
     }
 
@@ -167,14 +157,14 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
      */
     public List<S> samples() {
         LinkedList<S> samples = new LinkedList<>();
-        for (Tuple<Set<C>, S> element : sequence) {
+        for (Tuple<TreeSet<C>, S> element : sequence) {
             samples.add(element.two());
         }
         return samples;
     }
 
     @Override
-    public void update(Set<C> vector, S sample) {
+    public void update(TreeSet<C> vector, S sample) {
         if (vector.isEmpty()) {
             return;
         }
@@ -199,7 +189,7 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
         }
 
         if (!sequence.isEmpty()) {
-            Tuple<Set<C>, S> last = sequence.peekLast();
+            Tuple<TreeSet<C>, S> last = sequence.peekLast();
             Set<C> deletes = new HashSet<>();
 
             for (C candidate : last.one()) {
@@ -253,9 +243,9 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
     }
 
     @Override
-    public Set<C> vector() {
+    public TreeSet<C> vector() {
         if (sequence.isEmpty()) {
-            return new HashSet<>();
+            return new TreeSet<>();
         } else {
             return sequence.peekLast().one();
         }
@@ -267,14 +257,52 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
             return null;
         }
 
-        C estimate = null;
-        for (C candidate : sequence.peekLast().one()) {
-            if (estimate == null || candidate.filtprob() > estimate.filtprob()) {
-                estimate = candidate;
-            }
-        }
-        return estimate;
+//        C estimate = null;
+//        for (C candidate : sequence.peekLast().one()) {
+//            if (estimate == null || candidate.filtprob() > estimate.filtprob()) {
+//                estimate = candidate;
+//            }
+//        }
+//        return estimate;
+
+        return sequence.peekLast().one().last();
     }
+
+    /**
+     * Estimate point for sample at measurement time,
+     * it is different from `estimate()` as `estimate()` would find best candidate for the latest measurement,
+     * this method find best candidate for a specific time.
+     * @param measureTime
+     * @return best matching candidate for given measure time, null otherwise
+     */
+    public C estimate(long measureTime) {
+        if (sequence.isEmpty()) {
+            return null;
+        }
+
+        ListIterator<Tuple<TreeSet<C>, S>> iter = sequence.listIterator(sequence.size());
+
+        while (iter.hasPrevious()) {
+            Tuple<TreeSet<C>, S> cur = iter.previous();
+            if (measureTime < cur.two().time()) {
+               continue;
+            }
+
+            // cur.two().time() <= measureTime
+//            C  estimate = null;
+//            for (C candidate: cur.one()) {
+//                if (estimate == null || candidate.filtprob() > estimate.filtprob())  {
+//                    estimate = candidate;
+//                }
+//            }
+//            return estimate;
+
+            return cur.one().last();
+        }
+
+        return null;
+    }
+
 
     /**
      * Gets the most likely sequence of state candidates <i>s<sub>0</sub>, s<sub>1</sub>, ...,
@@ -304,7 +332,7 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         JSONArray jsonsequence = new JSONArray();
-        for (Tuple<Set<C>, S> element : sequence) {
+        for (Tuple<TreeSet<C>, S> element : sequence) {
             JSONObject jsonseqelement = new JSONObject();
             JSONArray jsonvector = new JSONArray();
             for (C candidate : element.one()) {
@@ -333,4 +361,5 @@ public class KState<C extends StateCandidate<C, T, S>, T extends StateTransition
 
         return json;
     }
+
 }

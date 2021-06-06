@@ -14,6 +14,7 @@ package com.bmwcarit.barefoot.tracker;
 
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicReference;
@@ -185,7 +186,7 @@ public class TrackerServer extends AbstractServer {
                                     }
                                 }
 
-                                final AtomicReference<Set<MatcherCandidate>> vector =
+                                final AtomicReference<TreeSet<MatcherCandidate>> vector =
                                         new AtomicReference<>();
                                 InlineScheduler scheduler = StaticScheduler.scheduler();
                                 scheduler.spawn(new Task() {
@@ -193,7 +194,7 @@ public class TrackerServer extends AbstractServer {
                                     public void run() {
                                         Stopwatch sw = new Stopwatch();
                                         sw.start();
-                                        Set<MatcherCandidate> curMatcherCandidates = matcher.execute(state.inner.vector(), state.inner.sample(), sample);
+                                        TreeSet<MatcherCandidate> curMatcherCandidates = matcher.execute(state.inner.vector(), state.inner.sample(), sample);
                                         vector.set(curMatcherCandidates);
                                         sw.stop();
 
