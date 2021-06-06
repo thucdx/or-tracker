@@ -22,13 +22,13 @@ import vn.viettel.onroad.StatePublisher;
 import vn.viettel.onroad.model.MovingSample;
 import vn.viettel.onroad.model.ResponseStatus;
 import vn.viettel.onroad.model.State;
+import vn.viettel.onroad.tracker.event.OverspeedEventDetails;
 
 import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -116,27 +116,46 @@ public class TrackerService {
         final State state = memory.getLocked(sample.id());
 
         MatcherSample prevSample = state.getInner().sample();
+
+        // TODO: refactor this code, should check for speed only one!
         if (prevSample != null) {
             // Out of order
             if (sample.time() < prevSample.time()) {
-                state.unlock();
-                logger.warn("Received out of order sample");
-                logger.warn("Id {} received out of order sample at {}", sample.id(), sample.time());
-                return ResponseStatus.ERROR;
+
+                if (Double.isNaN(sample.getVelocity())) {  // just report gps
+                    state.unlock();
+                    logger.warn("Received out of order sample");
+                    logger.warn("Id {} received out of order sample at {}", sample.id(), sample.time());
+                    return ResponseStatus.ERROR;
+                } else { // event reporting velocity, so we should check
+                    // TODO: publish event
+                    checkSpeedAndUnlock(state, sample);
+                    return ResponseStatus.SUCCESS;
+                }
             }
 
             // Short distance
             if (spatial.distance(sample.point(), prevSample.point()) < Math.max(0, distance)) {
-                state.unlock();
-                logger.warn("Id {} received sample below distance threshold", sample.id());
-                return ResponseStatus.SUCCESS;
+                if (Double.isNaN(sample.getVelocity())) {
+                    state.unlock();
+                    logger.warn("Id {} received sample below distance threshold", sample.id());
+                    return ResponseStatus.SUCCESS;
+                } else {
+                    checkSpeedAndUnlock(state, sample);
+                    return ResponseStatus.SUCCESS;
+                }
             }
 
             // Time
             if (sample.time() - prevSample.time() < Math.max(0, interval)) {
-                state.unlock();
-                logger.warn("Id {} received sample below interval threshold", sample.id());
-                return ResponseStatus.SUCCESS;
+                if (Double.isNaN(sample.getVelocity())) {
+                    state.unlock();
+                    logger.warn("Id {} received sample below interval threshold", sample.id());
+                    return ResponseStatus.SUCCESS;
+                } else {
+                   checkSpeedAndUnlock(state, sample);
+                   return ResponseStatus.SUCCESS;
+                }
             }
         }
 
@@ -176,12 +195,45 @@ public class TrackerService {
             }
         }
 
-        state.updateAndUnlock(TTL, publish);
+//        state.updateAndUnlock(TTL, publish);
+        /*
+         We don't unlock here because we need to lock and check for speed.
+         But don't forget to Unlock state!
+         */
+        state.update(TTL, publish);
+
+        // TODO: what if this event contain velocity. We should not unlock state.
+        if (!Double.isNaN(sample.getVelocity())) {
+            checkSpeedAndUnlock(state, sample);
+        } else {
+            // We have to unlock state to allow other thread access this state.
+            state.unlock();
+        }
 
         return ResponseStatus.SUCCESS;
     }
 
     public State getState(String id) {
         return memory.getIfExistsLocked(id);
+    }
+
+    public void checkSpeedAndUnlock(State state, MovingSample sample) {
+        MatcherCandidate cand = state.getInner().estimate(sample.time());
+        if (cand != null && !Double.isNaN(sample.getVelocity())) {
+            double maxSpeed = cand.point().edge().maxspeed();
+            if (maxSpeed < sample.getVelocity()) {
+                // TODO: publish over-speed event
+                OverspeedEventDetails overspeedEvent = new OverspeedEventDetails(sample.time(),
+                        cand.point().geometry(), maxSpeed, sample.getVelocity());
+                state.publishEventAndUnlock(TTL, TemporaryMemory.EventType.OVER_SPEED, overspeedEvent);
+            } else {
+                state.unlock();
+            }
+
+            // TODO: Underspeed ....
+
+        } else {
+            state.unlock();
+        }
     }
 }

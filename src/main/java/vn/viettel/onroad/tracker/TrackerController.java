@@ -41,6 +41,7 @@ public class TrackerController {
     public ResponseStatus track2(@RequestBody String request) {
         try {
             logger.info("Request: " + request);
+            // TODO: move to fastest json parser
             JSONObject json = new JSONObject(request);
             String id = json.optString("id");
             long time = json.optLong("time");

@@ -36,4 +36,8 @@ public class MovingSample extends MatcherSample {
             this.velocity = Double.NaN;
         }
     }
+
+    public double getVelocity() {
+        return velocity;
+    }
 }

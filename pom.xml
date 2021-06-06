@@ -84,6 +84,11 @@
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.dslplatform</groupId>
+            <artifactId>dsl-json-java8</artifactId>
+            <version>1.9.8</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

@@ -109,6 +109,10 @@ public class TemporaryMemoryTest {
             public void publish(String id, Tint element) {}
 
             @Override
+            public void publishEvent(String id, Tint element, TemporaryMemory.EventType eventType, EventDetails details) {
+            }
+
+            @Override
             public void delete(String id, long time) {
                 deleted.put(Integer.parseInt(id), new Object());
             }

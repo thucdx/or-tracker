@@ -13,7 +13,7 @@ matcher:
   radius:
     max: 200
   interval:
-    min:1000
+    min: 1000
   threads: 8
   shortenturns: true
 

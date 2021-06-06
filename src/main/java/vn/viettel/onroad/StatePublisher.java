@@ -1,12 +1,15 @@
 package vn.viettel.onroad;
 
+import com.bmwcarit.barefoot.tracker.EventDetails;
 import com.bmwcarit.barefoot.tracker.TemporaryMemory;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import vn.viettel.onroad.model.State;
 
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -47,6 +50,18 @@ public class StatePublisher extends Thread implements TemporaryMemory.Publisher<
             queue.put(json.toString());
         } catch (Exception e) {
             logger.error("update failed: {}", e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void publishEvent(String id, vn.viettel.onroad.model.State element, TemporaryMemory.EventType eventType, EventDetails details) {
+        try {
+            JSONObject json = details.toJSON();
+            json.put("id", id);
+            queue.put(json.toString());
+        } catch (Exception e) {
+            logger.error("Publish event failed: {}", e.getMessage());
             e.printStackTrace();
         }
     }

@@ -60,6 +60,7 @@ public class Matcher extends Filter<MatcherCandidate, MatcherTransition, Matcher
     private double lambda = 0d;
     private double radius = 200;
     private double distance = 15000;
+    private double maxVelocity = 100; // m/s ~ 360 km/h
     private boolean shortenTurns = true;
 
     /**
@@ -167,6 +168,14 @@ public class Matcher extends Filter<MatcherCandidate, MatcherTransition, Matcher
         return this.shortenTurns;
     }
 
+    public double getMaxVelocity() {
+        return maxVelocity;
+    }
+
+    public void setMaxVelocity(double maxVelocity) {
+        this.maxVelocity = maxVelocity;
+    }
+
     /**
      * Sets option to shorten turns (default true).
      *
@@ -264,7 +273,7 @@ public class Matcher extends Filter<MatcherCandidate, MatcherTransition, Matcher
         final Map<MatcherCandidate, Map<MatcherCandidate, Tuple<MatcherTransition, Double>>> transitions =
                 new ConcurrentHashMap<>();
         final double bound = Math.max(1000d, Math.min(distance,
-                ((candidates.one().time() - predecessors.one().time()) / 1000) * 100));
+                ((candidates.one().time() - predecessors.one().time()) / 1000.0) * maxVelocity));
 
         InlineScheduler scheduler = StaticScheduler.scheduler();
         for (final MatcherCandidate predecessor : predecessors.two()) {

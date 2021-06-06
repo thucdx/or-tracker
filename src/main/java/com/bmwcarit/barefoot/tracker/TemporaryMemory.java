@@ -14,7 +14,6 @@
 package com.bmwcarit.barefoot.tracker;
 
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -37,12 +36,7 @@ public class TemporaryMemory<E extends TemporaryElement<E>> {
     private final static Logger logger = LoggerFactory.getLogger(TemporaryMemory.class);
     private final Map<String, E> map = new HashMap<>();
     private final Queue<Tuple<Long, E>> queue =
-            new PriorityBlockingQueue<>(1, new Comparator<Tuple<Long, E>>() {
-                @Override
-                public int compare(Tuple<Long, E> left, Tuple<Long, E> right) {
-                    return (int) (left.one() - right.one());
-                }
-            });
+            new PriorityBlockingQueue<>(1, (left, right) -> (int) (left.one() - right.one()));
     private final Publisher<E> publisher;
     private final Factory<E> factory;
     private final AtomicBoolean stop = new AtomicBoolean(false);
@@ -77,10 +71,14 @@ public class TemporaryMemory<E extends TemporaryElement<E>> {
         }
     });
 
-    public static interface Publisher<E> {
-        public abstract void publish(String id, E element);
+    public enum EventType {
+        OVER_SPEED, UNDER_SPEED, TRAFFIC_SIGN, ROADSIDE_EVENT
+    }
 
-        public abstract void delete(String id, long time);
+    public static interface Publisher<E> {
+        void publish(String id, E element);
+        void publishEvent(String id, E element, EventType eventType, EventDetails details);
+        void delete(String id, long time);
     };
 
     public static abstract class Factory<E> {
@@ -103,12 +101,24 @@ public class TemporaryMemory<E extends TemporaryElement<E>> {
 
         @SuppressWarnings("unchecked")
         public void updateAndUnlock(int ttl, boolean publish) {
-            death = Math.max(death + 1, Calendar.getInstance().getTimeInMillis() + ttl * 1000);
+            update(ttl, publish);
+            lock.unlock();
+        }
+
+        public void update(int ttl, boolean publish) {
+            death = Math.max(death + 1, Calendar.getInstance().getTimeInMillis() + ttl * 1000L);
             logger.debug("element '{}' updated with ttl {} (death in {})", id, ttl, death);
             memory.queue.add(new Tuple<>(death, (E) this));
             if (publish) {
                 memory.publisher.publish(id, (E) this);
             }
+        }
+
+        public void publishEventAndUnlock(int ttl, EventType type, EventDetails details) {
+            death = Math.max(death + 1, Calendar.getInstance().getTimeInMillis() + ttl * 1000L);
+            logger.debug("element '{}' updated with ttl {} (death in {})", id, ttl, death);
+            memory.queue.add(new Tuple<>(death, (E) this));
+            memory.publisher.publishEvent(id,(E) this, type, details);
             lock.unlock();
         }
 
@@ -126,6 +136,12 @@ public class TemporaryMemory<E extends TemporaryElement<E>> {
             public void publish(String id, E element) {
                 return;
             }
+
+            @Override
+            public void publishEvent(String id, E element, EventType eventType, EventDetails details) {
+
+            }
+
 
             @Override
             public void delete(String id, long time) {

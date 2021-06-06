@@ -12,6 +12,7 @@
  */
 package com.bmwcarit.barefoot.tracker;
 
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
@@ -308,6 +309,30 @@ public class TrackerServer extends AbstractServer {
                 e.printStackTrace();
             }
         }
+
+        @Override
+        public void publishEvent(String id, TrackerServer.State element, TemporaryMemory.EventType eventType, EventDetails details) {
+            try {
+                JSONObject json = details.toJSON();
+                json.put("id", id);
+                queue.put(json.toString());
+            } catch (Exception e) {
+                logger.error("Publish event failed: {}", e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+//        @Override
+//        public void publishEvent(String id, vn.viettel.onroad.model.State element, TemporaryMemory.EventType eventType, EventDetails details) {
+//            try {
+//                JSONObject json = details.toJSON();
+//                json.put("id", id);
+//                queue.put(json.toString());
+//            } catch (Exception e) {
+//                logger.error("Publish event failed: {}", e.getMessage());
+//                e.printStackTrace();
+//            }
+//        }
 
         @Override
         public void delete(String id, long time) {
