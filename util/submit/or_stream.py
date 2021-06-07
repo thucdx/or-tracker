@@ -9,13 +9,14 @@ import subprocess
 import time
 import datetime
 import requests
+import math
 
 parser = optparse.OptionParser("or_stream.py [options]")
 parser.add_option("--url", dest="url", help="Tracking webservice URL", default="http://localhost:1234/track")
-parser.add_option("--file", dest="file", help="CSV file with sample data.", default="samples/processed_atuanhm_0603.csv")
+parser.add_option("--file", dest="file", help="CSV file with sample data.", default="samples/atuanhm_merge_2705.csv")
 parser.add_option("--id", dest="id", help="Object id.", default="Sample car")
 parser.add_option("--step", action="store_true", dest="step", default=False, help="Send stepwise.")
-parser.add_option("--delay", default=0.010, help="Delay between messages")
+parser.add_option("--delay", default=0.050, help="Delay between messages")
 
 (options, args) = parser.parse_args()
 
@@ -36,6 +37,9 @@ for rid in range(inp.shape[0]):
         "lng": row['lng'],
         "heading": row['heading']
     }
+
+    if row['speed'] is not None and not math.isnan(row['speed']):
+        obj['velocity'] = row['speed']
 
     json_str = json.dumps(obj)
     if options.step == True:

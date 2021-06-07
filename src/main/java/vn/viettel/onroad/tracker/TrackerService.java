@@ -222,6 +222,7 @@ public class TrackerService {
         if (cand != null && !Double.isNaN(sample.getVelocity())) {
             double maxSpeed = cand.point().edge().maxspeed();
             if (maxSpeed < sample.getVelocity()) {
+                logger.info("OVERSPEED " + sample.time());
                 // TODO: publish over-speed event
                 OverspeedEventDetails overspeedEvent = new OverspeedEventDetails(sample.time(),
                         cand.point().geometry(), maxSpeed, sample.getVelocity());

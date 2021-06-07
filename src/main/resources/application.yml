@@ -2,7 +2,7 @@ server:
   port: 1234
 
 db:
-  prop_path: config/hn.properties
+  prop_path: config/kv1.properties
 
 matcher:
   sigma: 10

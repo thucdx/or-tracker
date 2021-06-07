@@ -99,7 +99,7 @@ html, body, #map {
 		 * Shows/updates route of object's state.
 		 */
 		function showRoute(state) {
-			console.log('show/update route of ' + state.id);
+			// console.log('show/update route of ' + state.id);
 			route.clear();
 			if (state.route == undefined) {
 				var geometry = formatter.readGeometry(state.point, {
@@ -159,7 +159,7 @@ html, body, #map {
 			if (feature == null) {
 				return;
 			}
-			console.log('set/update focus to ' + focus.id);
+			// console.log('set/update focus to ' + focus.id);
 
 			map.getView().setCenter(feature.getGeometry().getCoordinates());
 			candidates.clear();
@@ -266,8 +266,14 @@ html, body, #map {
 		socket.on('message', function(update) {
 			var object = objects.getFeatureById(update.id);
 
+			if ('event' in update) {
+				console.log("!!! SPEED VIOLATION !!!");
+				console.log("At: " + new Date(update.time).toString() + ": v = " + update.curSpeed + " / " + update.maxSpeed);
+				console.log("Details: " + JSON.stringify(update));
+			}
+
 			if (!('point' in update)) {
-				console.log('delete object ' + update.id);
+				// console.log('delete object ' + update.id);
 
 				if (object != undefined) {
 					objects.removeFeature(object);
@@ -279,7 +285,7 @@ html, body, #map {
 				});
 
 				if (object == undefined) {
-					console.log('insert object ' + update.id);
+					// console.log('insert object ' + update.id);
 					var feature = new ol.Feature({
 						geometry : geometry
 					});
@@ -287,7 +293,7 @@ html, body, #map {
 					feature.state = update;
 					objects.addFeature(feature);
 				} else {
-					console.log('update object ' + update.id);
+					// console.log('update object ' + update.id);
 					object.state = update;
 					object.setGeometry(geometry);
 

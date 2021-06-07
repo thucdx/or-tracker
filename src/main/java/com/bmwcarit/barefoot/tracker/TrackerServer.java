@@ -315,24 +315,13 @@ public class TrackerServer extends AbstractServer {
             try {
                 JSONObject json = details.toJSON();
                 json.put("id", id);
+                json.put("event", eventType.toString());
                 queue.put(json.toString());
             } catch (Exception e) {
                 logger.error("Publish event failed: {}", e.getMessage());
                 e.printStackTrace();
             }
         }
-
-//        @Override
-//        public void publishEvent(String id, vn.viettel.onroad.model.State element, TemporaryMemory.EventType eventType, EventDetails details) {
-//            try {
-//                JSONObject json = details.toJSON();
-//                json.put("id", id);
-//                queue.put(json.toString());
-//            } catch (Exception e) {
-//                logger.error("Publish event failed: {}", e.getMessage());
-//                e.printStackTrace();
-//            }
-//        }
 
         @Override
         public void delete(String id, long time) {

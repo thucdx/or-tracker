@@ -59,7 +59,9 @@ public class StatePublisher extends Thread implements TemporaryMemory.Publisher<
         try {
             JSONObject json = details.toJSON();
             json.put("id", id);
+            json.put("event", eventType.toString());
             queue.put(json.toString());
+            logger.info("SPEED VIOLATION" + json.toString());
         } catch (Exception e) {
             logger.error("Publish event failed: {}", e.getMessage());
             e.printStackTrace();
