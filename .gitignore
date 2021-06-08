@@ -1,6 +1,6 @@
 # Barefoot map data
 *.bfmap
-.~lock.*
+**/.~lock.*
 *.iml
 *.ipr
 
