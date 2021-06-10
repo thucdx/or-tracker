@@ -17,28 +17,28 @@ public class TrackerController {
     @Autowired
     TrackerService tracker;
 
-    @PostMapping("/")
-    public ResponseStatus track(@RequestBody String request) {
-        try {
-            logger.info("Request: " + request);
-            JSONObject json = new JSONObject(request);
-
-            if (!json.optString("id").isEmpty()
-                    && !json.optString("time").isEmpty()
-                    && !json.optString("point").isEmpty()) {
-                        final MovingSample sample = new MovingSample(json);
-                        return tracker.update(sample);
-            } else {
-                return ResponseStatus.ERROR;
-            }
-        } catch (JSONException e) {
-            logger.warn(e.getMessage(), e);
-            return ResponseStatus.ERROR;
-        }
-    }
+//    @PostMapping("/")
+//    public ResponseStatus trackOriginal(@RequestBody String request) {
+//        try {
+//            logger.info("Request: " + request);
+//            JSONObject json = new JSONObject(request);
+//
+//            if (!json.optString("id").isEmpty()
+//                    && !json.optString("time").isEmpty()
+//                    && !json.optString("point").isEmpty()) {
+//                        final MovingSample sample = new MovingSample(json);
+//                        return tracker.update(sample);
+//            } else {
+//                return ResponseStatus.ERROR;
+//            }
+//        } catch (JSONException e) {
+//            logger.warn(e.getMessage(), e);
+//            return ResponseStatus.ERROR;
+//        }
+//    }
 
     @PostMapping("/track")
-    public ResponseStatus track2(@RequestBody String request) {
+    public ResponseStatus track(@RequestBody String request) {
         try {
             logger.info("Request: " + request);
             // TODO: move to fastest json parser
