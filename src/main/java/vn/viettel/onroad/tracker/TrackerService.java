@@ -10,6 +10,7 @@ import com.bmwcarit.barefoot.spatial.Geography;
 import com.bmwcarit.barefoot.spatial.SpatialOperator;
 import com.bmwcarit.barefoot.topology.Dijkstra;
 import com.bmwcarit.barefoot.tracker.TemporaryMemory;
+import com.bmwcarit.barefoot.util.AbstractServer;
 import com.bmwcarit.barefoot.util.SourceException;
 import com.bmwcarit.barefoot.util.Stopwatch;
 import com.esri.core.geometry.GeometryEngine;
@@ -28,6 +29,8 @@ import javax.annotation.PostConstruct;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -106,6 +109,68 @@ public class TrackerService {
                 return new State(id);
             }
         }, new StatePublisher(port));
+    }
+
+    /**
+     * Report GPS containing list of gps events
+     * @param samples
+     * @return
+     */
+    public ResponseStatus updateReportGPS(List<MovingSample> samples) {
+        int sampleSize = samples.size();
+        if (sampleSize == 0) {
+            return ResponseStatus.SUCCESS;
+        }
+
+        logger.trace("Sample size: {}", samples.size());
+
+        final State state = memory.getLocked(samples.get(0).id());
+        MatcherSample prevSample = null;
+        MovingSample sample = null;
+
+        for (int i = 0; i < sampleSize; ++i) {
+            prevSample = state.getInner().sample();
+            sample = samples.get(i);
+
+            logger.trace("Process sample at {}", new Date(sample.time()));
+
+            if (prevSample != null) {
+                // Out of order
+                if (sample.time() < prevSample.time()) {
+                    // Dont
+                    logger.warn("Received out of order sample");
+                    logger.warn("Id {} received out of order sample at {}", sample.id(), sample.time());
+                    continue;
+                }
+
+                // Short distance
+                if (spatial.distance(sample.point(), prevSample.point()) < Math.max(0, distance)) {
+                    logger.warn("Id {} received sample below distance threshold", sample.id());
+                }
+
+                // Short time
+                if (sample.time() - prevSample.time() < Math.max(0, interval)) {
+                    logger.warn("Id {} received sample below interval threshold", sample.id());
+                }
+            }
+
+            final AtomicReference<TreeSet<MatcherCandidate>> vector = new AtomicReference<>();
+            Stopwatch sw = new Stopwatch();
+            sw.start();
+            TreeSet<MatcherCandidate> curMatcherCandidates = matcher.execute(state.getInner().vector(),
+                    state.getInner().sample(), sample);
+            vector.set(curMatcherCandidates);
+            sw.stop();
+
+            // Update current state based on new observed GPS
+            state.getInner().update(vector.get(), sample);
+
+            logger.debug("State update of object {} processed in {} ms", sample.id(), sw.ms());
+            logger.debug("Matcher candidate for object {} is: {}", sample.id(), curMatcherCandidates.size());
+        }
+
+        state.updateAndUnlock(TTL, true);
+        return ResponseStatus.SUCCESS;
     }
 
     /**
