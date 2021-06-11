@@ -1,6 +1,6 @@
 OnRoad Map Tracking Realtime
 ------
-Autho `@thucdx`
+Author: `@thucdx`
 
 Under Construction
 
@@ -48,6 +48,7 @@ Cấu hình sửa mức logging ở `src/resources/logback.xml`.
 !TODO: lệnh cql
   
 - Thực hiện convert 
+  
   - 3.3.1 Convert file REPORT_GPS
 ```
 cd samples/
