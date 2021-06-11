@@ -28,6 +28,11 @@ public class MovingSample extends MatcherSample {
        this.velocity = velocity;
     }
 
+    public MovingSample(MovingSampleWrapper wrapper) {
+        super(wrapper.getId(), wrapper.getTime(), wrapper.getLat(), wrapper.getLng(), wrapper.getAzimuth());
+        this.velocity = wrapper.getVelocity();
+    }
+
     public MovingSample(JSONObject json) throws JSONException {
         super(json);
         if (json.has("velocity")) {

@@ -1,15 +1,12 @@
 __author__ = "thucdx"
 __copyright__ = "Copyright 2021 Viettel"
 
-import datetime
+import json
+import math
 import optparse
 import pandas as pd
-import json
-import subprocess
-import time
-import datetime
 import requests
-import math
+import time
 
 parser = optparse.OptionParser("or_stream.py [options]")
 parser.add_option("--url", dest="url", help="Tracking webservice URL", default="http://localhost:1234/track")
