@@ -44,10 +44,21 @@ Cấu hình sửa mức logging ở `src/resources/logback.xml`.
 
 ### 3.3 Tạo dữ liệu mẫu
 
-- Download bản tin `REPORT_GPS` (chỉ chứa mảng các GPS) và `REPORT_VEHICLE` (chứa GPS và SPEED) từ Cassandra. Lưu thành định dạng csv có header.
-!TODO: lệnh cql
-  
-- Thực hiện convert 
+#### Download
+ Download bản tin `REPORT_GPS` (chỉ chứa mảng các GPS) và `REPORT_VEHICLE` (chứa GPS và SPEED) từ Cassandra. Lưu thành định dạng csv có header.
+```
+cd samples
+./export_from_cassandra.sh
+```
+*Chú ý*: Sửa entity_id, start_time, end_time, partition, output files trong scripts
+
+Mặc định:
+  - report_gps sẽ vào `data/gps.csv`,
+  - report_vehicle report sẽ vào `data/vehicle.csv`
+
+
+#### Thực hiện convert 
+
   - 3.3.1 Convert file REPORT_GPS
 ```
 cd samples/
@@ -79,7 +90,5 @@ node util/monitor/monitor.js 3000 localhost 1235
 
 - Truy cập web monitor ở địa chỉ: http://localhost:3000
 Bật chế độ debug để xem console log`
-
-
 
 
