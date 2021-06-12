@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
@@ -64,6 +65,11 @@ public class TrackerService {
     private int TTL;
     @Value("${tracker.port: 1235}")
     private int port;
+    @Value("${filter.confidence: 0.7}")
+    private double filterConfidence;
+
+    AtomicInteger cntOutOfOrder = new AtomicInteger(0);
+    AtomicInteger gpsSample = new AtomicInteger(0);
 
     @PostConstruct
     private void init() {
@@ -127,6 +133,7 @@ public class TrackerService {
         State state = memory.getLocked(samples.get(0).id());
         MatcherSample prevSample = null;
         MovingSample sample = null;
+        gpsSample.addAndGet(sampleSize);
 
         for (int i = 0; i < sampleSize; ++i) {
             prevSample = state.getInner().sample();
@@ -138,20 +145,22 @@ public class TrackerService {
                 // Out of order
                 if (sample.time() < prevSample.time()) {
                     // Dont
-                    logger.warn("Received out of order sample");
-                    logger.warn("Id {} received out of order sample at {}", sample.id(), sample.time());
+                    logger.debug("Received out of order sample");
+                    logger.debug("[ReportGPS] Id {} received out of order sample at {}, prevSampleTime at {}, delta {}",
+                            sample.id(), sample.time(), prevSample.time(), sample.time() - prevSample.time());
+                    cntOutOfOrder.incrementAndGet();
                     continue;
                 }
 
                 // Short distance
                 if (spatial.distance(sample.point(), prevSample.point()) < Math.max(0, distance)) {
-                    logger.warn("Id {} received sample below distance threshold", sample.id());
+                    logger.debug("Id {} received sample below distance threshold", sample.id());
                     continue;
                 }
 
                 // Short time
                 if (sample.time() - prevSample.time() < Math.max(0, interval)) {
-                    logger.warn("Id {} received sample below interval threshold", sample.id());
+                    logger.debug("Id {} received sample below interval threshold", sample.id());
                     continue;
                 }
             }
@@ -186,6 +195,7 @@ public class TrackerService {
 
         MatcherSample prevSample = state.getInner().sample();
 
+        gpsSample.addAndGet(1);
         // TODO: refactor this code, should check for speed only one!
         if (prevSample != null) {
             // Out of order
@@ -193,8 +203,10 @@ public class TrackerService {
 
                 if (Double.isNaN(sample.getVelocity())) {  // just report gps
                     state.unlock();
-                    logger.warn("Received out of order sample");
-                    logger.warn("Id {} received out of order sample at {}", sample.id(), sample.time());
+                    logger.debug("Received out of order sample");
+                    logger.debug("[Update] Id {} received out of order sample at {}, prevSampleTime at {}, delta {}",
+                            sample.id(), sample.time(), prevSample.time(), sample.time() - prevSample.time());
+                    cntOutOfOrder.incrementAndGet();
                     return ResponseStatus.ERROR;
                 } else { // event reporting velocity, so we should check
                     // TODO: publish event
@@ -207,7 +219,7 @@ public class TrackerService {
             if (spatial.distance(sample.point(), prevSample.point()) < Math.max(0, distance)) {
                 if (Double.isNaN(sample.getVelocity())) {
                     state.unlock();
-                    logger.warn("Id {} received sample below distance threshold", sample.id());
+                    logger.debug("Id {} received sample below distance threshold", sample.id());
                     return ResponseStatus.SUCCESS;
                 } else {
                     checkSpeedAndUnlock(state, sample);
@@ -219,7 +231,7 @@ public class TrackerService {
             if (sample.time() - prevSample.time() < Math.max(0, interval)) {
                 if (Double.isNaN(sample.getVelocity())) {
                     state.unlock();
-                    logger.warn("Id {} received sample below interval threshold", sample.id());
+                    logger.debug("Id {} received sample below interval threshold", sample.id());
                     return ResponseStatus.SUCCESS;
                 } else {
                    checkSpeedAndUnlock(state, sample);
@@ -254,7 +266,7 @@ public class TrackerService {
                 double distance = spatial.distance(estimate.point().geometry(), sample.point());
 
                 try {
-                    logger.info("Sample: {}, candidate: {}, New matching: filtprob = {}, distance from measure: {}",
+                    logger.debug("Sample: {}, candidate: {}, New matching: filtprob = {}, distance from measure: {}",
                             sample.toJSON().toString(),
                             GeometryEngine.geometryToWkt(estimate.point().geometry(), WktExportFlags.wktExportPoint),
                             estimate.filtprob(), distance);
@@ -288,7 +300,7 @@ public class TrackerService {
 
     public void checkSpeedAndUnlock(State state, MovingSample sample) {
         MatcherCandidate cand = state.getInner().estimate(sample.time());
-        if (cand != null && !Double.isNaN(sample.getVelocity())) {
+        if (cand != null && !Double.isNaN(sample.getVelocity()) && cand.filtprob() >= filterConfidence) {
             double maxSpeed = cand.point().edge().maxspeed();
             if (maxSpeed < sample.getVelocity()) {
                 logger.info("OVERSPEED " + sample.time());

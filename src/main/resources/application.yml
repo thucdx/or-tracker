@@ -26,3 +26,6 @@ tracker:
 kstate:
   k: 30
   t: 90000
+
+filter:
+  confidence: 0.7
