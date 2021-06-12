@@ -1,17 +1,15 @@
 package vn.viettel.onroad.tracker;
 
 import com.bmwcarit.barefoot.markov.Sample;
-import com.bmwcarit.barefoot.matcher.MatcherSample;
 import com.jsoniter.JsonIterator;
 import com.jsoniter.any.Any;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import vn.viettel.onroad.model.ManyMovingSamples;
+import vn.viettel.onroad.model.MovingSamples;
 import vn.viettel.onroad.model.MovingSample;
 import vn.viettel.onroad.model.ResponseStatus;
 
@@ -50,16 +48,15 @@ public class TrackerController {
     public ResponseStatus trackMany(@RequestBody String request) {
         try {
             logger.debug("Request: " + request);
-            ManyMovingSamples samples = JsonIterator.deserialize(request, ManyMovingSamples.class);
+            MovingSamples samples = JsonIterator.deserialize(request, MovingSamples.class);
             List<MovingSample> movingSamples = samples.getSamples().stream()
                     .map(e -> {
-                        MovingSample new_e = new MovingSample(e);
                         e.setId(samples.getId());
-                        return new_e;
+                        return new MovingSample(e);
                     })
                     .sorted(Comparator.comparingLong(Sample::time))
                     .collect(Collectors.toList());
-
+            logger.debug("Sample size: {}", movingSamples.size());
             return tracker.updateReportGPS(movingSamples);
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);
@@ -76,13 +73,15 @@ public class TrackerController {
             Long time = any.get("time").toLong();
             Double lat = any.get("lat").toDouble();
             Double lng = any.get("lng").toDouble();
-            Double heading = any.get("heading").toDouble();
+            Double heading = any.get("azimuth").toDouble();
             Double velocity = any.get("velocity").toDouble();
 
             // Heading is optional.
             if (!id.isEmpty() && time > 0 && (!Double.isNaN(lat)) && (!Double.isNaN(lng))) {
                 try {
                     final MovingSample sample = new MovingSample(id, time, lat, lng, heading, velocity);
+                    logger.debug("MovingSample: ", sample.toJSON().toString());
+
                     return tracker.update(sample);
                 } catch (Exception e) {
                     return ResponseStatus.SERVER_ERROR;

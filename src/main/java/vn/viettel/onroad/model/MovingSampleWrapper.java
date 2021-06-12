@@ -8,6 +8,9 @@ public class MovingSampleWrapper {
     double azimuth;
     double velocity;
 
+    public MovingSampleWrapper() {
+    }
+
     public MovingSampleWrapper(String id, long time, double lat, double lng, double azimuth, double velocity) {
         this.id = id;
         this.time = time;

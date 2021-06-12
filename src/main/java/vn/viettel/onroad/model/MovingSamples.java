@@ -2,7 +2,7 @@ package vn.viettel.onroad.model;
 
 import java.util.List;
 
-public class ManyMovingSamples {
+public class MovingSamples {
     String id;
     List<MovingSampleWrapper> samples;
 

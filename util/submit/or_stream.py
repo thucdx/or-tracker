@@ -13,7 +13,7 @@ parser.add_option("--url", dest="url", help="Tracking webservice URL", default="
 parser.add_option("--file", dest="file", help="CSV file with sample data.", default="samples/atuanhm_merge_2705.csv")
 parser.add_option("--id", dest="id", help="Object id.", default="Sample car")
 parser.add_option("--step", action="store_true", dest="step", default=False, help="Send stepwise.")
-parser.add_option("--delay", default=0.050, help="Delay between messages")
+parser.add_option("--delay", default=0.001, help="Delay between messages")
 
 (options, args) = parser.parse_args()
 
@@ -32,7 +32,7 @@ for rid in range(inp.shape[0]):
         "time": row['positionTime'] * 1000,
         "lat": row['lat'],
         "lng": row['lng'],
-        "heading": row['heading']
+        "azimuth": row['heading']
     }
 
     if row['speed'] is not None and not math.isnan(row['speed']):

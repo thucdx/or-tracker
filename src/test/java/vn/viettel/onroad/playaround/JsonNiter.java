@@ -27,7 +27,5 @@ public class JsonNiter {
         Any arr = a.get("arr");
         Any arr2 = a.get("arr2");
         System.out.println(arr == null);
-
-
     }
 }
