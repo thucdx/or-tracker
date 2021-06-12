@@ -2,7 +2,7 @@ OnRoad Map Tracking Realtime
 ------
 Author: `@thucdx`
 
-Under Construction
+![Img](img/img.png)
 
 ### 1.Giới thiệu
 
@@ -44,12 +44,6 @@ Cấu hình sửa mức logging ở `src/resources/logback.xml`.
 
 ### 3.3 Tạo dữ liệu mẫu
 
-- Download bản tin `REPORT_GPS` (chỉ chứa mảng các GPS) và `REPORT_VEHICLE` (chứa GPS và SPEED) từ Cassandra. Lưu thành định dạng csv có header.
-!TODO: lệnh cql
-  
-- Thực hiện convert 
-  
-=======
 #### Download
  Download bản tin `REPORT_GPS` (chỉ chứa mảng các GPS) và `REPORT_VEHICLE` (chứa GPS và SPEED) từ Cassandra. Lưu thành định dạng csv có header.
 ```
@@ -86,6 +80,9 @@ python ./merge_gps_vehicle_report --gps $OUTPUT_GPS --vehicle $OUT_VEHICLE --out
 ```
 python util/submit/or_stream.py --url localhost:1234/track --file $MREGE_OUTPUT --id sample_car_01
 ```
+
+hoặc bắn mix 2 bản tin : REPORT_GPS (vào /trackMany) và REPORT_VEHILCE (vào /track) đồng thời th
+Chạy notebook ở `util/submit/merge_or_stream.ipynb`
 
 ### 3.4 Chạy web monitor
 
