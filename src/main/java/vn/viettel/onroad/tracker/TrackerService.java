@@ -124,7 +124,7 @@ public class TrackerService {
 
         logger.trace("Sample size: {}", samples.size());
 
-        final State state = memory.getLocked(samples.get(0).id());
+        State state = memory.getLocked(samples.get(0).id());
         MatcherSample prevSample = null;
         MovingSample sample = null;
 
@@ -146,11 +146,13 @@ public class TrackerService {
                 // Short distance
                 if (spatial.distance(sample.point(), prevSample.point()) < Math.max(0, distance)) {
                     logger.warn("Id {} received sample below distance threshold", sample.id());
+                    continue;
                 }
 
                 // Short time
                 if (sample.time() - prevSample.time() < Math.max(0, interval)) {
                     logger.warn("Id {} received sample below interval threshold", sample.id());
+                    continue;
                 }
             }
 
@@ -167,6 +169,8 @@ public class TrackerService {
 
             logger.debug("State update of object {} processed in {} ms", sample.id(), sw.ms());
             logger.debug("Matcher candidate for object {} is: {}", sample.id(), curMatcherCandidates.size());
+
+            state.update(TTL, false);
         }
 
         state.updateAndUnlock(TTL, true);
